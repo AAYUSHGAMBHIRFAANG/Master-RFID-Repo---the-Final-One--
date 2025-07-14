@@ -1,0 +1,100 @@
+/* reset + base */
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Arial', sans-serif; color: #222; }
+
+/* Banner at top */
+header.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 0.5rem 1rem;
+  border-bottom: 4px solid #b71c1c; /* deep red */
+}
+header.banner img { height: 60px; }
+header.banner .title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.2rem;
+  color: #b71c1c;
+  font-weight: bold;
+}
+
+/* set full screen background, but keep header above */
+.login-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.678);
+  background-image: url('./components/assets/background.jpeg');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+header.banner {
+  z-index: 2;
+  position: relative;
+}
+
+/* Form card */
+.login-card {
+  background: rgba(255,255,255,0.8);
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Headline */
+.login-card h2 {
+  margin-bottom: 1.5rem;
+  color: #333;
+  letter-spacing: 1px;
+}
+
+/* Inputs */
+.login-card input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border: none;
+  border-radius: 999px;
+  font-size: 1rem;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Button */
+.login-card button {
+  background: #b71c1c;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.login-card button:hover {
+  background: #7f0000;
+}
+
+/* Forgot link */
+.login-card .forgot {
+  display: block;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: #555;
+  text-decoration: none;
+}
+.login-card .forgot:hover {
+  text-decoration: underline;
+}

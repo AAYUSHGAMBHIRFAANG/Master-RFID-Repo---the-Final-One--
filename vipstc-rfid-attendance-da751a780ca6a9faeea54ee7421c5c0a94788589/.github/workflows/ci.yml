@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: localpass
+          POSTGRES_DB: vipstc
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: apps/backend
+        run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: apps/backend
+        run: npx prisma generate
+
+      - name: Run migrations
+        working-directory: apps/backend
+        env:
+          DATABASE_URL: postgres://postgres:localpass@localhost:5432/vipstc
+        run: npx prisma migrate deploy
+
+      - name: Run tests
+        working-directory: apps/backend
+        env:
+          DATABASE_URL: postgres://postgres:localpass@localhost:5432/vipstc
+          JWT_SECRET: Y1TcVMLD2Lt3DHFXM7TQY85B5py7WQa1irWtBXpfthw
+          JWT_REFRESH_SECRET: ai_JuvyAaxpFvYit2i5yanuoquT2CrzP1aiQe7tBH9g
+        run: npm test

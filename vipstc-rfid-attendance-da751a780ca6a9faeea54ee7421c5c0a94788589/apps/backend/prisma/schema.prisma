@@ -1,0 +1,144 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Department {
+  id      Int      @id @default(autoincrement())
+  code    String   @unique
+  name    String
+  courses Course[]
+}
+
+model Course {
+  id            Int        @id @default(autoincrement())
+  department    Department @relation(fields: [departmentId], references: [id])
+  departmentId  Int
+  name          String
+  durationYears Int
+  degreeType    String // UG / PG
+  semesters     Semester[]
+}
+
+model Semester {
+  id       Int       @id @default(autoincrement())
+  course   Course    @relation(fields: [courseId], references: [id])
+  courseId Int
+  number   Int
+  type     String // odd / even
+  sections Section[]
+}
+
+model Section {
+  id         Int               @id @default(autoincrement())
+  name       String
+  semester   Semester          @relation(fields: [semesterId], references: [id])
+  semesterId Int
+  students   Student[]
+  instances  SubjectInstance[]
+}
+
+model Subject {
+  id        Int               @id @default(autoincrement())
+  code      String            @unique
+  name      String
+  credits   Int?
+  instances SubjectInstance[]
+}
+
+model SubjectInstance {
+  id            Int            @id @default(autoincrement())
+  subject       Subject        @relation(fields: [subjectId], references: [id])
+  subjectId     Int
+  section       Section        @relation(fields: [sectionId], references: [id])
+  sectionId     Int
+  faculty       Faculty        @relation(fields: [facultyId], references: [id])
+  facultyId     Int
+  classSessions ClassSession[]
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  passwordHash   String
+  role           String // ADMIN | PCOORD | TEACHER
+  facultyProfile Faculty?
+}
+
+model Faculty {
+  id               Int               @id @default(autoincrement())
+  user             User              @relation(fields: [userId], references: [id])
+  userId           Int               @unique // one-to-one requires UNIQUE here
+  empId            String            @unique
+  name             String
+  phone            String
+  rfidUid          String            @unique
+  devices          Device[] // 1-to-many: Faculty → Device
+  // NEW ↓ back-references
+  subjectInstances SubjectInstance[] // Faculty teaches many subject instances
+  classSessions    ClassSession[] // Faculty appears as teacher in sessions
+}
+
+model Student {
+  id           Int             @id @default(autoincrement())
+  rfidUid      String          @unique
+  enrollmentNo String          @unique
+  name         String
+  phone        String?
+  section      Section         @relation(fields: [sectionId], references: [id])
+  sectionId    Int
+  logs         AttendanceLog[]
+}
+
+model Device {
+  id          Int             @id @default(autoincrement())
+  macAddr     String          @unique @db.VarChar(17)
+  secret      String
+  faculty     Faculty         @relation(fields: [facultyId], references: [id])
+  facultyId   Int
+  lastBootAt  DateTime?
+  scansQueued Int             @default(0)
+  sessions    ClassSession[]
+  // NEW ↓ back-reference
+  logs        AttendanceLog[] // Device writes many attendance logs
+}
+
+model ClassSession {
+  id            Int            @id @default(autoincrement())
+  subjectInst   SubjectInstance @relation(fields: [subjectInstId], references: [id])
+  subjectInstId Int
+  teacher       Faculty        @relation(fields: [teacherId], references: [id])
+  teacherId     Int
+
+  device        Device?        @relation(fields: [deviceId], references: [id]) // ← optional
+  deviceId      Int?                                               // ← optional
+
+  startAt       DateTime
+  endAt         DateTime?
+  isClosed      Boolean        @default(false)
+  logs          AttendanceLog[]
+}
+
+
+model AttendanceLog{
+  id             Int              @id @default(autoincrement())
+  student        Student          @relation(fields: [studentId], references: [id])
+  studentId      Int
+  session        ClassSession     @relation(fields: [sessionId], references: [id])
+  sessionId      Int
+  status         AttendanceStatus
+  timestamp      DateTime
+  device         Device           @relation(fields: [deviceId], references: [id])
+  deviceId       Int
+  manualOverride Boolean          @default(false)
+  @@unique([studentId, sessionId])
+}
+
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+}

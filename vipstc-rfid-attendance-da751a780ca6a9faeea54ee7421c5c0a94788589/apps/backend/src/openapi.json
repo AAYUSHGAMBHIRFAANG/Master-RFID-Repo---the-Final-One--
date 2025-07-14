@@ -1,0 +1,346 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "RFID Attendance API",
+    "version": "1.0.0",
+    "description": "VIPSTC RFID-Based Attendance System API"
+  },
+  "servers": [
+    { "url": "http://localhost:3000", "description": "Local server" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status":   { "type": "string" },
+          "db":       { "type": "string" },
+          "latency":  { "type": "integer" },
+          "uptime":   { "type": "number" },
+          "env":      { "type": "string" }
+        }
+      },
+      "LoginReq": {
+        "type": "object",
+        "required": ["email","password"],
+        "properties": {
+          "email":    { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        }
+      },
+      "Tokens": {
+        "type": "object",
+        "properties": {
+          "access":  { "type": "string" },
+          "refresh": { "type": "string" }
+        }
+      },
+      "HandshakeReq": {
+        "type": "object",
+        "required": ["mac","secret"],
+        "properties": {
+          "mac":    { "type": "string" },
+          "secret": { "type": "string" }
+        }
+      },
+      "HandshakeRes": {
+        "type": "object",
+        "properties": { "jwt": { "type": "string" } }
+      },
+      "AuthReq": {
+        "type": "object",
+        "required": ["uid"],
+        "properties": { "uid": { "type": "string" } }
+      },
+      "OpenSessionReq": {
+        "type": "object",
+        "required": ["sectionId"],
+        "properties": { "sectionId": { "type": "integer" } }
+      },
+      "OpenSessionRes": {
+        "type": "object",
+        "properties": { "sessionId": { "type": "integer" } }
+      },
+      "ScanReq": {
+        "type": "object",
+        "required": ["uid","sessionId"],
+        "properties": {
+          "uid":       { "type": "string" },
+          "sessionId": { "type": "integer" }
+        }
+      },
+      "OverrideReq": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "type": "string", "enum": ["PRESENT","ABSENT"] }
+        }
+      },
+      "AttendanceRow": {
+        "type": "object",
+        "properties": {
+          "studentId":    { "type": "integer" },
+          "name":         { "type": "string" },
+          "enrollmentNo": { "type": "string" },
+          "presentCount": { "type": "integer" },
+          "absentCount":  { "type": "integer" },
+          "totalCount":   { "type": "integer" },
+          "percentage":   { "type": "number" }
+        }
+      },
+      "ReportRes": {
+        "type": "object",
+        "properties": {
+          "report": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AttendanceRow" }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Health" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login with email/password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginReq" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT tokens",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tokens" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "summary": "Refresh access token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "refresh": { "type": "string" } },
+                "required": ["refresh"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New access token",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "access": { "type": "string" } } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/device/handshake": {
+      "post": {
+        "summary": "Device handshake for JWT",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/HandshakeReq" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device JWT",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HandshakeRes" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/device/auth": {
+      "post": {
+        "summary": "Authenticate device with Teacher RFID",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AuthReq" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Authenticated" }
+        }
+      }
+    },
+    "/api/session/open": {
+      "post": {
+        "summary": "Open a new class session",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OpenSessionReq" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Session opened",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OpenSessionRes" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session/close/{id}": {
+      "patch": {
+        "summary": "Close an open session",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in":   "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session closed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type":"object",
+                  "properties": { "ok": { "type":"boolean" }, "endAt": { "type": "string", "format":"date-time" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scan": {
+      "post": {
+        "summary": "Record a scan",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ScanReq" }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Recorded" }
+        }
+      }
+    },
+    "/api/attendance/{logId}": {
+      "patch": {
+        "summary": "Manually override an attendance log",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name":"logId","in":"path","required":true,"schema":{ "type":"integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OverrideReq" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Overridden",
+            "content": {
+              "application/json": {
+                "schema": { "type":"object","properties": { "log": { "$ref":"#/components/schemas/AttendanceRow" } } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/report/{sectionId}": {
+      "get": {
+        "summary": "Get attendance report (JSON)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name":"sectionId","in":"path","required":true,"schema":{ "type":"integer" } },
+          { "name":"from","in":"query","required":true,"schema":{ "type":"string","format":"date" } },
+          { "name":"to","in":"query","required":true,"schema":{ "type":"string","format":"date" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Report",
+            "content": {
+              "application/json": {
+                "schema": { "$ref":"#/components/schemas/ReportRes" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/report/{sectionId}/export.xlsx": {
+      "get": {
+        "summary": "Download attendance report as Excel",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name":"sectionId","in":"path","required":true,"schema":{ "type":"integer" } },
+          { "name":"from","in":"query","required":true,"schema":{ " type":"string","format":"date" } },
+          { "name":"to","in":"query","required":true,"schema":{ " type":"string","format":"date" } }
+        ],
+        "responses": {
+          "200": { "description": "Excel file" }
+        }
+      }
+    }
+  }
+}
