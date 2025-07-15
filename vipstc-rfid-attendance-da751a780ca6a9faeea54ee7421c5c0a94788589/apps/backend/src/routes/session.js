@@ -77,7 +77,6 @@ sessionRouter.patch(
     }
 
     const closed = await closeSession(sessionId);
-    await broadcastSnapshot(sessionId);
     res.json({ ok: true, endAt: closed.endAt });
   })
 );

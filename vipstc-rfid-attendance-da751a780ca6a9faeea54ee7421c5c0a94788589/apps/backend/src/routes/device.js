@@ -7,7 +7,7 @@ import { prisma } from '../services/prisma.js';
 import { makeDeviceToken, verifyToken } from '../utils/jwt.js';
 import { isHexUid } from '../utils/validators.js';
 import * as sessionSvc from '../services/sessionService.js';
-
+import { broadcast } from '../websocket.js';
 export const deviceRouter = Router();
 
 /* ───────────────── HELPERS ────────────────────────── */

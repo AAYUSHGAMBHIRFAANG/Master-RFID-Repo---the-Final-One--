@@ -10,83 +10,86 @@ export default function RecordPage() {
   /* phases: pick → wait → live */
   const [phase, setPhase]   = useState("pick");
 
-  /* date & time inputs */
-  const todayStr = new Date().toISOString().slice(0, 10);      // yyyy‑mm‑dd
-  const timeStr  = new Date().toTimeString().slice(0, 5);      // HH:MM
+  /* date & time defaults */
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const timeStr  = new Date().toTimeString().slice(0, 5);
 
-  const [date, setDate]     = useState(todayStr);
-  const [time, setTime]     = useState(timeStr);
-
+  const [date, setDate]         = useState(todayStr);
+  const [time, setTime]         = useState(timeStr);
   const [sessionId, setSessionId] = useState(null);
-  const [logs, setLogs]     = useState([]);
-  const [authOk, setAuthOk] = useState(false);
+  const [logs, setLogs]         = useState([]);
+  const [authOk, setAuthOk]     = useState(false);
 
-  /* ---------- WebSocket ---------- */
-useEffect(() => {
-  if (!sessionId) return;
+  /* ─── WebSocket life-cycle ───────────────────────── */
+  useEffect(() => {
+    if (!sessionId) return;
+    const ws = new WebSocket(
+      `${import.meta.env.VITE_WS}/ws/session/${sessionId}`
+    );
 
-  const ws = new WebSocket(
-    `${import.meta.env.VITE_WS}/ws/session/${sessionId}`
-  );
+    ws.onmessage = (e) => {
+      const { event, data } = JSON.parse(e.data);
 
-  ws.onmessage = (e) => {
-    const { event, data } = JSON.parse(e.data);
+      if (event === "auth:ok") {
+        setAuthOk(true);
+      }
 
-    if (event === "auth:ok") setAuthOk(true);
+      if (event === "attendance:snapshot") {
+        setLogs(data);
+        setAuthOk(true);
+        setPhase("live");
+      }
 
-    if (event === "attendance:snapshot") {
-      setLogs(data);
-      setAuthOk(true);
-      setPhase("live");
-    }
+      if (event === "attendance:add") {
+        // only add well-formed records
+        if (data && data.student) {
+          setLogs((prev) => [...prev, data]);
+          setPhase("live");
+        }
+      }
+    };
 
-    if (event === "attendance:add") {
-      setLogs((prev) => [...prev, data]);
-      setPhase("live");
-    }
-  };
+    return () => ws.close();
+  }, [sessionId]);
 
-  return () => ws.close();
-}, [sessionId]);
-
-  /* ---------- handlers ---------- */
+  /* ─── Handlers ───────────────────────────────────── */
   async function handleNext(e) {
     e.preventDefault();
     const startAt = new Date(`${date}T${time}:00`);
-
     if (startAt > new Date()) {
-      toast.error("Future time not allowed", { duration: 3000 });
+      toast.error("Future time not allowed");
       return;
     }
-
     try {
       const { data } = await api.post("/session/open", {
         subjectInstId: Number(subjectInstId),
-        startAt: startAt.toISOString(),
+        startAt:       startAt.toISOString(),
       });
       setSessionId(data.sessionId);
       setPhase("wait");
     } catch {
-      /* toast handled globally */
+      /* global interceptor will toast */
     }
   }
 
   async function handleDone() {
     if (!window.confirm("Close attendance?")) return;
-    await api.patch(`/session/close/${sessionId}`);
-    nav(-1);
+    try {
+      await api.patch(`/session/close/${sessionId}`);
+      nav(-1);
+    } catch {
+      toast.error("Failed to close session");
+    }
   }
 
-  /* ---------- UI ---------- */
+  /* ─── UI ──────────────────────────────────────────── */
   return (
     <div className="dashboard-wrap">
       <Toaster />
 
-      {/* ─── Phase: pick date/time ───────────────────────────── */}
       {phase === "pick" && (
         <form onSubmit={handleNext} className="form-box">
           <h2>Select Date &amp; Time</h2>
-
           <input
             type="date"
             value={date}
@@ -94,30 +97,28 @@ useEffect(() => {
             max={todayStr}
             required
           />
-
           <input
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
             required
           />
-
-          <button type="submit" className="btn-primary">Next</button>
+          <button type="submit" className="btn-primary">
+            Next
+          </button>
         </form>
       )}
 
-      {/* ─── Phase: waiting for teacher card ────────────────── */}
       {phase === "wait" && (
         <div className="status-box">
           {authOk ? (
-            <h2 style={{ color: "green" }}>Device authenticated ✓</h2>
+            <h2 style={{ color: "green" }}>Device authenticated ✅</h2>
           ) : (
             <h2>Waiting for device authentication…</h2>
           )}
         </div>
       )}
 
-      {/* ─── Phase: live scanning ───────────────────────────── */}
       {phase === "live" && (
         <>
           <table className="att-table">
@@ -125,34 +126,34 @@ useEffect(() => {
               <tr>
                 <th>#</th>
                 <th>Name</th>
-                <th>Enroll&nbsp;No.</th>
+                <th>Enroll No.</th>
                 <th>Time</th>
               </tr>
             </thead>
-
-            <tbody>{logs.length === 0 ? (
-  <tr>
-    <td colSpan={4} style={{ textAlign: "center" }}>
-      — no scans yet —
-    </td>
-  </tr>
-) : (
-  logs.map((l, i) => (
-    <tr key={l.id}>
-      <td>{i + 1}</td>
-      <td>{l.student.name}</td>
-      <td>{l.student.enrollmentNo}</td>
-      <td>
-        {new Date(l.timestamp).toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit"
-        })}
-      </td>
-    </tr>
-  ))
-)}</tbody>
-
+            <tbody>
+              {logs.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: "center" }}>
+                    — no scans yet —
+                  </td>
+                </tr>
+              ) : (
+                logs.map((l, i) => (
+                  <tr key={`log-${l.id || i}`}>
+                    <td>{i + 1}</td>
+                    <td>{l.student?.name || "—"}</td>
+                    <td>{l.student?.enrollmentNo || "—"}</td>
+                    <td>
+                      {new Date(l.timestamp).toLocaleTimeString("en-IN", {
+                        hour:   "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
           </table>
 
           <button onClick={handleDone} className="btn-done">
