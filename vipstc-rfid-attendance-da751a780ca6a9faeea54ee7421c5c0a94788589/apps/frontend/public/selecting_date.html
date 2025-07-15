@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Select Date – RFID Attendance</title>
+  <style>
+    /* header / layout */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{font-family:Arial, sans-serif;background:#f5f5f5}
+    .header-top{background:#8B0000;color:#fff;text-align:right;padding:.5rem 1.5rem;font-weight:bold;font-size:.9rem}
+    .header-main{display:flex;align-items:center;justify-content:space-between;background:#fff;padding:.75rem 1.5rem;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+    .header-main .logo{height:60px}
+    .header-main .title{flex:1;text-align:center;font-size:1.3rem;color:#8B0000;font-weight:bold}
+    .header-accreditation,.header-school{background:#fff;text-align:center;padding:.5rem 1.5rem}
+    .header-accreditation{font-size:.9rem;color:#333;line-height:1.4}
+    .header-school{font-size:1.1rem;color:#8B0000;font-weight:bold}
+    hr{margin:0 1.5rem 1.5rem;border:none;height:4px;background:#8B0000}
+
+    /* card */
+    .card{background:#F8EDEB;max-width:600px;margin:2rem auto;border-radius:1rem;padding:2rem;box-shadow:0 4px 8px rgba(0,0,0,.1)}
+    .card h2{font-size:1.75rem;margin:1rem 0;color:#222}
+    .date-col{display:flex;flex-direction:column;margin-bottom:2rem}
+    .date-col label{font-size:.9rem;margin-bottom:.25rem;color:#333}
+    .date-col input{padding:.75rem 1rem;border:1px solid #8B0000;border-radius:.5rem;font-size:1rem}
+    .actions{display:flex;justify-content:flex-end;gap:1rem}
+    .link-btn{background:none;border:none;color:#8B0000;font-size:1rem;cursor:pointer}
+    .btn-ok{background:#8B0000;color:#fff;border:none;padding:.5rem 1.5rem;border-radius:.5rem;font-size:1rem;cursor:pointer}
+  </style>
+</head>
+<body>
+  <!-- header -->
+  <div class="header-top">TEACHER DASHBOARD</div>
+  <div class="header-main">
+    <img src="vips-logo.webp" alt="VIPS Logo" class="logo">
+    <div class="title">Vivekananda Institute of Professional Studies - Technical Campus</div>
+    <img src="emblem.webp" alt="Emblem" class="logo">
+  </div>
+  <div class="header-accreditation">Approved by AICTE, Accredited Grade “A+” Institution by NAAC, NBA Accredited, Recognized under Section 2(f) by UGC, Affiliated to GGSIP University, Recognized by Bar Council of India, ISO 9001:2015 Certified</div>
+  <div class="header-school">Vivekananda School of Information Technology</div>
+  <hr>
+
+  <!-- picker -->
+  <div class="card">
+    <h2>Select Date</h2>
+    <div class="date-col">
+      <label for="date-input">Date</label>
+      <input type="date" id="date-input">
+    </div>
+    <div class="actions">
+      <button class="link-btn" id="cancel-btn">Cancel</button>
+      <button class="btn-ok"   id="ok-btn">OK</button>
+    </div>
+  </div>
+
+  <script>
+    /* keep the selected class/section */
+    const cls = new URLSearchParams(location.search).get('class') || '';
+
+    document.getElementById('cancel-btn').onclick = () => history.back();
+
+    document.getElementById('ok-btn').onclick = () => {
+      const date = document.getElementById('date-input').value;
+      if (!date) return alert('Please pick a date.');
+      location.href = `show_attendance.html?class=${encodeURIComponent(cls)}&date=${date}`;
+    };
+  </script>
+</body>
+</html>

@@ -31,7 +31,7 @@ export default function SubjectCard({ item }) {
           className="retrieve"
           onClick={(e) => {
             e.stopPropagation();
-            nav(`/dashboard/teacher/report/${item.id}`);
+            window.location.href = '/selecting_date.html';
           }}
         >
           Retrieve

@@ -85,15 +85,9 @@ infra/               # Docker and deployment configs
 - `GET /api/health` — Health check
 - See route files for more endpoints
 
-## Demo Users
-- Admin: `admin@vips-tc.ac.in` / password you set
-- Teachers: `teacher1@vips-tc.ac.in` / `teachpass1`, etc.
-- Students: `student1@vips-tc.ac.in` / `studpass1`, etc.
 
 ## Development
 - Use Postman or Swagger to test APIs
 - Use Vite for hot-reloading frontend
 - Use Prisma for database migrations and queries
 
-## License
-MIT
