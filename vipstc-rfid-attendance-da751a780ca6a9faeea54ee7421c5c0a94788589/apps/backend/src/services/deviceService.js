@@ -1,3 +1,4 @@
+
 import { prisma } from './prisma.js';
 
 export async function verifyDevice(mac, secret) {

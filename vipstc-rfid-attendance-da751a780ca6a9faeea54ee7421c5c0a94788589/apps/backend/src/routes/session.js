@@ -1,40 +1,82 @@
+// apps/backend/src/routes/session.js
 import { Router } from 'express';
 import { prisma } from '../services/prisma.js';
 import { verifyJWT, requireRole } from '../middlewares/auth.js';
 import { asyncWrap } from '../middlewares/error.js';
-import * as sessionSvc from '../services/sessionService.js';
+import {
+  getTeacherSubjectInstances,
+  openSession,
+  closeSession
+} from '../services/sessionService.js';
 import { broadcastSnapshot } from '../services/attendanceService.js';
+
 export const sessionRouter = Router();
 
-/* ---- POST /api/session/open ------------------------------------------ */
+/* ───────────────── GET /api/session/mine/subjects ────────────── */
+sessionRouter.get(
+  '/mine/subjects',
+  verifyJWT,
+  requireRole('TEACHER'),
+  asyncWrap(async (req, res) => {
+    const faculty = await prisma.faculty.findFirst({
+      where: { userId: req.user.sub },
+      select: { id: true }
+    });
+    if (!faculty) return res.status(400).json({ message: 'No faculty profile' });
+
+    const list = await getTeacherSubjectInstances(faculty.id);
+    res.json(list);
+  })
+);
+
+/* ───────────────── POST /api/session/open ───────────────────────
+   Body:
+   { subjectInstId?, sectionId?, startAt? }
+   – Accepts either identifier for legacy clients                */
 sessionRouter.post(
   '/open',
   verifyJWT,
   requireRole('TEACHER'),
   asyncWrap(async (req, res) => {
-    const { sectionId } = req.body || {};
-    if (!sectionId) return res.sendStatus(400);
-        // req.user.sub = userId  ➜  find the matching faculty row
-      const faculty = await prisma.faculty.findFirst({
-    where: { userId: req.user.sub },
-    select: { id: true }
-  });
+    const { subjectInstId, sectionId, startAt } = req.body || {};
+
+    if (!subjectInstId && !sectionId)
+      return res.status(400).json({ message: 'subjectInstId or sectionId required' });
+
+    const faculty = await prisma.faculty.findFirst({
+      where: { userId: req.user.sub },
+      select: { id: true }
+    });
     if (!faculty) return res.status(400).json({ message: 'No faculty profile' });
 
-    const session = await sessionSvc.openSession(faculty.id, sectionId);
+    // openSession auto‑detects whether id is SubjectInstance or Section
+    const session = await openSession(
+      faculty.id,
+      subjectInstId ?? sectionId,
+      startAt
+    );
 
     res.status(201).json({ sessionId: session.id });
-    await broadcastSnapshot(session.id);
+    await broadcastSnapshot(session.id);     // push fresh table to waiting UI
   })
 );
 
-/* ---- PATCH /api/session/close/:id ------------------------------------ */
+/* ───────────────── PATCH /api/session/close/:id ────────────────
+   Teacher can close only his/her own session; ADMIN can close any */
 sessionRouter.patch(
   '/close/:id',
   verifyJWT,
   asyncWrap(async (req, res) => {
     const sessionId = Number(req.params.id);
-    const closed = await sessionSvc.closeSession(sessionId);
+
+    if (req.user.role === 'TEACHER') {
+      const owns = await prisma.classSession.count({
+        where: { id: sessionId, teacher: { userId: req.user.sub } }
+      });
+      if (!owns) return res.status(403).json({ message: 'forbidden' });
+    }
+
+    const closed = await closeSession(sessionId);
     await broadcastSnapshot(sessionId);
     res.json({ ok: true, endAt: closed.endAt });
   })

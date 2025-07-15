@@ -1,0 +1,65 @@
+.section-card {
+  background: #fde9ec;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.12);
+  padding: 32px 24px;
+  text-align: center;
+  cursor: pointer;
+  max-width: 220px;          /* NEW: fixes tile width */
+  transition: transform .15s, box-shadow .15s;
+}
+
+.section-card {
+  max-width: 220px;
+  margin: 0;          /* margin handled by flex gap */
+}
+
+.section-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+
+.section-card h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #222;
+}
+
+.section-card p {
+  margin: 4px 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #c8102e;                    /* VIPS red */
+}
+
+.btn‑row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.section-card button {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+
+.section-card .record { background: #28a745; }
+.section-card .record:hover { background: #218838; }
+
+.section-card .retrieve { background: #007bff; }
+.section-card .retrieve:hover { background: #0069d9; }
+
+.section-card .add‑student {
+  background: none;
+  color: #444;
+  text-decoration: underline;
+  padding: 0;
+}
+.section-card .add‑student:hover { color: #000; }

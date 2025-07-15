@@ -98,3 +98,128 @@ header.banner {
 .login-card .forgot:hover {
   text-decoration: underline;
 }
+.section-flex {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;        /* <- horizontal centring */
+  gap: 24px;
+}
+
+/* optional: keep a nice max width and auto‑centre the block itself */
+.dashboard-wrap {
+  max-width: 1200px;
+  margin: 40px auto;              /* top space + centre entire block */
+  padding: 0 16px;
+}
+
+.dashboard-wrap {
+  max-width: 1200px;   /* optional width clamp */
+  margin: 40px auto;   /* gap‑from‑banner + horizontal center */
+  padding: 0 16px; 
+  text-align: center;    /* side padding for small screens */
+}
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+.dashboard-wrap h1{
+  padding-bottom: 1rem;
+}
+/* centre wrapper */
+.dashboard-wrap {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+/* heading */
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* flex grid */
+.section-flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+}
+
+/* small form + status boxes */
+/* BIGGER form card */
+.form-box {
+  background: #fde9ec;
+  border-radius: 20px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  padding: 48px 40px;
+  width: 420px;        /* was 320 */
+  margin: 0 auto;
+  
+}
+
+/* headline a bit larger */
+.form-box h2 {
+  font-size: 24px;     /* was 22 */
+  margin-bottom: 18px;
+}
+
+/* inputs scale up */
+.form-box input[type="date"],
+.form-box input[type="time"] {
+  padding: 10px 12px;  /* taller */
+  font-size: 15px;
+  margin: 0 0 16px; /* bottom margin */
+  width: 100%;        /* full width */ 
+}
+
+/* NEXT button — cursor only when active */
+.form-box button[type="submit"] {
+  margin-top: 24px;
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background: #c8102e;
+  opacity: 0.45;          /* disabled look */
+  cursor: default;        /* default arrow */
+  transition: opacity 0.2s, background 0.2s, cursor 0.2s;
+}
+.form-box button[type="submit"]:hover {
+  opacity: 0.65;          /* hover look */
+  cursor: pointer;        /* pointer on hover */
+}
+.form-box button[type="submit"].active:hover {
+  background: #a70d26;
+}
+/*  make the form at center of screen  */
+.form-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.board-wrap       { padding: 40px 60px; font-family: sans-serif; }
+.status-bar       { margin-bottom: 20px; display:flex; gap:12px; align-items:center; }
+.btn-download     { margin-left:auto; background:#c00; color:#fff; padding:4px 12px; border-radius:4px; }
+.att-table.big    { width:100%; border-collapse:collapse; }
+.att-table.big th { background:#f2f2f2; text-align:left; padding:6px 8px; }
+.att-table.big td { border-bottom:1px solid #ddd; padding:6px 8px; }
+.btn-back         { margin-top:18px; padding:6px 20px; }
+/* src/index.css (add near the bottom) */
+.header-bar {
+  width: 100%;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 4px solid #b71c1c; /* deep red */
+  text-align: center;
+  background: white;
+}

@@ -1,215 +1,173 @@
-// prisma/seed.js
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
+/**
+ * Seed script for VIPS‑TC demo data.
+ * Run:  npx prisma db seed
+ */
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
+const SALT = 10;
 
-const subjects = [
-  { code: 'BCA101T', name: 'Programming for Problem Solving using C' },
-  { code: 'BCA103T', name: 'Fundamental of Information Technology' },
-  { code: 'BCA105T', name: 'Web Technologies' },
-  { code: 'BCA107T', name: 'Mathematical Foundation for Computer Science' },
-  { code: 'BCA101P', name: 'Programming for Problem Solving using C Lab' },
-  { code: 'BCA103P', name: 'Fundamental of Information Technology Lab' },
-  { code: 'BCA105P', name: 'Web Technologies Lab' },
-  { code: 'BCA141T', name: 'Writing Skills' },
-  { code: 'BCA191T', name: 'Understanding India' },
-  { code: 'BCA181T', name: 'Bridge Course in Mathematics' },
-  { code: 'BCA102T', name: 'Database Management System' },
-  { code: 'BCA104T', name: 'Object Oriented Programming using Java' },
-  { code: 'BCA106T', name: 'Data Structures and Algorithms' },
-  { code: 'BCA108T', name: 'Software Engineering' },
-  { code: 'BCA102P', name: 'Database Management System Lab' },
-  { code: 'BCA104P', name: 'Object Oriented Programming using Java Lab' },
-  { code: 'BCA106P', name: 'Data Structures and Algorithms Lab' },
-  { code: 'BCA108P', name: 'Software Engineering Lab' },
-  { code: 'BCA142T', name: 'Soft Skills' },
-  { code: 'BCA192T', name: 'Environment Studies' },
-  { code: 'BCA201T', name: 'Python Programming' },
-  { code: 'BCA203T', name: 'Dynamic Web Designing' },
-  { code: 'BCA205T', name: 'Computer Organization and Architecture' },
-  { code: 'BCA207T', name: 'Discrete Mathematics' },
-  { code: 'BCA201P', name: 'Python Programming Lab' },
-  { code: 'BCA203P', name: 'Dynamic Web Designing Lab' },
-  { code: 'BCA205P', name: 'Computer Organization and Architecture Lab' }
-];
+async function main() {
+  /* 1. Departments */
+  const vsit = await prisma.department.upsert({
+  data: {
+    code: "VSIT",
+    name: "Vivekananda School of Information Technology"
+  }
+});
 
-async function seed() {
-  console.log(`🌱 Seeding database...`);
+const vset = await prisma.department.upsert({
+  data: {
+    code: "VSET",
+    name: "Vivekananda School of Engineering & Technology"
+  }
+});
 
-  await prisma.attendanceLog.deleteMany();
-  await prisma.classSession.deleteMany();
-  await prisma.device.deleteMany();
-  await prisma.student.deleteMany();
-  await prisma.subjectInstance.deleteMany();
-  await prisma.subject.deleteMany();
-  await prisma.section.deleteMany();
-  await prisma.semester.deleteMany();
-  await prisma.course.deleteMany();
-  await prisma.department.deleteMany();
-  await prisma.faculty.deleteMany();
-  await prisma.user.deleteMany();
-
-  // Create department and course
-  const dept = await prisma.department.create({
-    data: {
-      code: 'BCA',
-      name: 'Computer Applications',
-      courses: {
-        create: {
-          name: 'Bachelor of Computer Applications',
-          durationYears: 3,
-          degreeType: 'UG',
-        },
-      },
-    },
-    include: { courses: true }
+  /* 2. Courses (with durationYears) */
+  const courses = await prisma.course.createMany({
+    data: [
+      { name: "Bachelor of Computer Applications", departmentId: 1, durationYears: 3, degreeType: "UG" }, // id 1
+      { name: "B.Tech Computer Science & Engineering", departmentId: 2, durationYears: 4, degreeType: "UG" }, // id 2
+      { name: "Master of Computer Applications", departmentId: 1, durationYears: 2, degreeType: "PG" } // id 3
+    ],
+    skipDuplicates: true
   });
 
-  const course = dept.courses[0];
-
-  // Create semesters and sections
-  const semesters = [];
-  for (let i = 1; i <= 6; i++) {
-    const sem = await prisma.semester.create({
-      data: {
-        number: i,
-        type: i % 2 === 0 ? 'even' : 'odd',
-        courseId: course.id,
-      },
-    });
-
-    for (const secName of ['A', 'B']) {
-      const section = await prisma.section.create({
+  /* 3. Semesters & Sections */
+  for (let courseId = 1; courseId <= 3; courseId++) {
+    const years = courseId === 2 ? 4 : courseId === 3 ? 2 : 3; // durations
+    for (let sem = 1; sem <= years * 2; sem++) {
+      const semester = await prisma.semester.create({
         data: {
-          name: `BCA${i}${secName}`,
-          semesterId: sem.id,
-        },
+          number: sem,
+          type: sem % 2 ? "odd" : "even",
+          courseId
+        }
       });
-
-      // Add 5 students
-      for (let j = 1; j <= 5; j++) {
-        await prisma.student.create({
-          data: {
-            name: `Student ${i}${secName}${j}`,
-            enrollmentNo: `BCA${i}${secName}${j}`,
-            phone: `9990000${i}${j}`,
-            rfidUid: `${i}${secName}${j}`.padStart(12, '0'),
-            sectionId: section.id,
-          },
+      // Two sections A & B
+      for (const sName of ["A", "B"]) {
+        await prisma.section.create({
+          data: { name: sName, semesterId: semester.id }
         });
       }
     }
-
-    semesters.push(sem);
   }
 
-  // Add subjects
-  await prisma.subject.createMany({ data: subjects });
-
-  // Create real teacher and 2 sample teachers
-  const users = await prisma.user.createMany({
+  /* 4. Subjects (3 Theory + 3 Lab) */
+  const subjects = await prisma.subject.createMany({
     data: [
-      {
-        email: 'admin@vipstc.edu.in',
-        passwordHash: await bcrypt.hash('Vips@123', 10),
-        role: 'ADMIN',
-      },
-      {
-        email: 'aayushgambhir06@gmail.com',
-        passwordHash: await bcrypt.hash('Fosil@231', 10),
-        role: 'TEACHER',
-      },
-      {
-        email: 'sample1@vipstc.edu.in',
-        passwordHash: await bcrypt.hash('Sample@123', 10),
-        role: 'TEACHER',
-      },
-      {
-        email: 'sample2@vipstc.edu.in',
-        passwordHash: await bcrypt.hash('Sample@123', 10),
-        role: 'TEACHER',
-      },
+      { code: "BCA101T", name: "Programming Fundamentals", credits: 4, type: "T" },
+      { code: "BCA101P", name: "Programming Lab", credits: 1, type: "P" },
+      { code: "CSE202T", name: "Data Structures", credits: 4, type: "T" },
+      { code: "CSE202P", name: "Data Structures Lab", credits: 1, type: "P" },
+      { code: "MCA301T", name: "Software Engineering", credits: 3, type: "T" },
+      { code: "MCA301P", name: "Software Engineering Lab", credits: 1, type: "P" }
     ],
-    skipDuplicates: true,
+    skipDuplicates: true
   });
 
-  const userList = await prisma.user.findMany({ where: { role: 'TEACHER' } });
+  /* 5. Users & Faculty */
+  const teachersSeed = [
+    {
+      name: "Anita Sharma",
+      email: "anita.sharma@vips.edu.in",
+      empId: "VSIT‑T001",
+      phone: "9876543210",
+      departmentId: 1,
+      password: "password123"
+    },
+    {
+      name: "Rahul Verma",
+      email: "rahul.verma@vips.edu.in",
+      empId: "VSET‑T002",
+      phone: "9876543211",
+      departmentId: 2,
+      password: "password123"
+    },
+    {
+      name: "Kavita Mehra",
+      email: "kavita.mehra@vips.edu.in",
+      empId: "VSIT‑T003",
+      phone: "9876543212",
+      departmentId: 1,
+      password: "password123"
+    }
+  ];
 
-  // Create faculty profiles for teachers
-  for (let i = 0; i < userList.length; i++) {
-    const user = userList[i];
-    const faculty = await prisma.faculty.create({
+  for (const t of teachersSeed) {
+    const pwHash = await bcrypt.hash(t.password, SALT);
+    const user = await prisma.user.create({
+      data: {
+        email: t.email,
+        passwordHash: pwHash,
+        role: "TEACHER"
+      }
+    });
+    await prisma.faculty.create({
       data: {
         userId: user.id,
-        empId: `T${100 + i}`,
-        name: `Teacher ${i + 1}`,
-        phone: `98765432${10 + i}`,
-        rfidUid: `ABCDEF12345${i}`,
-      },
-    });
-
-    // Assign to one section of each semester
-    const assignedSections = await prisma.section.findMany({
-      take: 3,
-      skip: i * 3
-    });
-
-    for (const section of assignedSections) {
-      const subs = await prisma.subject.findMany({ take: 3 });
-      for (const sub of subs) {
-        const instance = await prisma.subjectInstance.create({
-          data: {
-            facultyId: faculty.id,
-            sectionId: section.id,
-            subjectId: sub.id,
-          },
-        });
-
-        // Create a device
-        const device = await prisma.device.create({
-       data: {
-      macAddr: `00:11:22:33:44:${(Date.now() + i).toString(16).slice(-6)}`,
-      secret: `secret${i}`,
-      facultyId: faculty.id,
-      lastBootAt: new Date(),
-    },
-  });
-        // Attach session
-        const session = await prisma.classSession.create({
-          data: {
-            subjectInstId: instance.id,
-            teacherId: faculty.id,
-            deviceId: device.id,
-            startAt: new Date(Date.now() - 60 * 60 * 1000),
-            isClosed: false,
-          },
-        });
-
-        // One scan
-        const students = await prisma.student.findMany({
-          where: { sectionId: section.id },
-          take: 1,
-        });
-
-        await prisma.attendanceLog.create({
-          data: {
-            studentId: students[0].id,
-            sessionId: session.id,
-            deviceId: device.id,
-            status: 'PRESENT',
-            timestamp: new Date(),
-          },
-        });
+        empId: t.empId,
+        name: t.name,
+        phone: t.phone,
+        rfidUid: (Math.random().toString(16).slice(2) + "000000000000").slice(0, 12) // dummy 12‑hex
       }
+    });
+  }
+
+  /* 6. Subject Instances – map each teacher to a section */
+  // Anita -> BCA 2A Programming
+  await prisma.subjectInstance.create({
+    data: {
+      subjectId: 1, // BCA101T
+      sectionId: 3, // BCA semester 2 section A
+      facultyId: 1
+    }
+  });
+  // Rahul -> CSE 4B Data Structures
+  await prisma.subjectInstance.create({
+    data: {
+      subjectId: 3, // CSE202T
+      sectionId: 14, // CSE semester 4 section B
+      facultyId: 2
+    }
+  });
+  // Kavita -> MCA 1A Software Engg
+  await prisma.subjectInstance.create({
+    data: {
+      subjectId: 5, // MCA301T
+      sectionId: 19, // MCA semester 1 section A
+      facultyId: 3
+    }
+  });
+
+  /* 7. Demo Students (10 per section) */
+  const demoSections = [3, 14, 19]; // sectionIds above
+  let enrolSeq = 1;
+
+  for (const sId of demoSections) {
+    for (let i = 1; i <= 10; i++) {
+      const enrol = `DEMO${String(enrolSeq).padStart(3, "0")}`;
+      enrolSeq++;
+      await prisma.student.create({
+        data: {
+          name: `Student ${enrol}`,
+          enrollmentNo: enrol,
+          rfidUid: (Math.random().toString(16).slice(2) + "000000000000").slice(0, 12),
+          sectionId: sId
+        }
+      });
     }
   }
 
-  console.log(`✅ Seeding complete.`);
-  await prisma.$disconnect();
+  console.log("✅ Seed completed");
 }
 
-seed().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
