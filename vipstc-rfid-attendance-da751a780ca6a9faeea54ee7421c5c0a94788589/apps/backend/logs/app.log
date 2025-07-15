@@ -773,3 +773,6 @@
 [2025-07-15T11:15:14.309Z] 200 GET /api/device/next-session 9.610 ms
 [2025-07-15T11:15:33.485Z] 204 POST /api/scan 17.562 ms
 [2025-07-15T11:28:44.494Z] 201 POST /api/session/open 21.896 ms
+[2025-07-15T11:35:34.507Z] 200 POST /api/auth/login 52.281 ms
+[2025-07-15T11:35:34.531Z] 304 GET /api/session/mine/subjects 7.383 ms
+[2025-07-15T11:35:37.389Z] 201 POST /api/session/open 13.841 ms
