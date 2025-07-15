@@ -70,6 +70,7 @@ deviceRouter.post(
       session = await sessionSvc.openSession(dev.facultyId, null); // placeholder; section filled by portal
 
     await sessionSvc.attachDevice(session.id, dev.id);
+    broadcast(session.id, 'auth:ok', {});  
     res.json({ sessionId: session.id });
   })
 );
