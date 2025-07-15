@@ -1,0 +1,67 @@
+/* apps/frontend/src/pages/RecordPage.css */
+
+.record-page { padding: 0 2rem; }
+.form-box, .status-box {
+  text-align: center;
+  margin-top: 3rem;
+}
+.btn-primary {
+  background: #e06666;
+  color: white;
+  padding: .75rem 2rem;
+  border: none;
+  border-radius: .5rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.btn-secondary, .btn-back, .btn-done {
+  margin: 1rem .5rem;
+  padding: .5rem 1.5rem;
+  border: 1px solid #e06666;
+  background: white;
+  color: #e06666;
+  border-radius: .25rem;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: .9rem;
+}
+.btn-secondary:hover,
+.btn-back:hover,
+.btn-done:hover {
+  background: #e06666;
+  color: white;
+}
+.actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+.att-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.att-table th, .att-table td {
+  padding: .75rem .5rem;
+  border-bottom: 1px solid #ddd;
+}
+.att-table thead th {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+}
+.att-table tr:nth-child(even) {
+  background: #f9f9f9;
+}
+.empty {
+  text-align: center;
+  color: #999;
+}
+.status-box h2.green { color: #4CAF50; }
+.status-box h2.red   { color: #E64A19; }

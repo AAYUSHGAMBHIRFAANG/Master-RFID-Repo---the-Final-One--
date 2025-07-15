@@ -56,24 +56,34 @@ deviceRouter.post(
   verifyDeviceJwt,
   asyncWrap(async (req, res) => {
     const { uid } = req.body || {};
-    if (!isHexUid(uid)) return res.status(400).json({ message: 'uid format' });
+    if (!isHexUid(uid)) 
+      return res.status(400).json({ message: 'uid format' });
 
     const dev = req.device;
     if (dev.faculty.rfidUid.toLowerCase() !== uid.toLowerCase())
       return res.status(403).json({ message: 'wrong teacher card' });
 
-    // find existing open session or create a placeholder
+    // 1) find the *latest* open session, not just any
     let session = await prisma.classSession.findFirst({
-      where: { teacherId: dev.facultyId, isClosed: false }
+      where: { teacherId: dev.facultyId, isClosed: false },
+      orderBy: { startAt: 'desc' }
     });
-    if (!session)
-      session = await sessionSvc.openSession(dev.facultyId, null); // placeholder; section filled by portal
+    if (!session) {
+      session = await sessionSvc.openSession(dev.facultyId, null);
+    }
 
+    // 2) attach this device
     await sessionSvc.attachDevice(session.id, dev.id);
-    broadcast(session.id, 'auth:ok', {});  
+
+    console.log(`📣 [device/auth] broadcasting auth:ok for session ${session.id}`);
+    broadcast(session.id, 'auth:ok', {});
+
+    // 3) reply to the ESP32
     res.json({ sessionId: session.id });
   })
 );
+
+
 
 /* ───────── GET /next-session  (device polls) ──────── */
 deviceRouter.get(

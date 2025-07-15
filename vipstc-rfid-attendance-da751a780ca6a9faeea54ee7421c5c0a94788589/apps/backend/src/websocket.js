@@ -1,15 +1,8 @@
-// apps/backend/src/websocket.js
 import { WebSocketServer } from 'ws';
-import { broadcastSnapshot } from './services/attendanceService.js';  // adjust path as needed
+import { broadcastSnapshot } from './services/attendanceService.js';  // adjust path
 
-/** ------------------------------------------------------------------
- *  Single shared WSS instance (filled inside initWebSocket)
- * ------------------------------------------------------------------ */
 let wss = null;
 
-/** ------------------------------------------------------------------
- *  initWebSocket(server)   — call once from app.js after app.listen()
- * ------------------------------------------------------------------ */
 export function initWebSocket(server) {
   if (wss) return wss;
   wss = new WebSocketServer({ noServer: true });
@@ -38,23 +31,25 @@ export function initWebSocket(server) {
     });
   }, 30_000);
   pingInterval.unref();
+
   return wss;
 }
 
-/** ------------------------------------------------------------------
- *  broadcast(sessionId, event, data)
- * ------------------------------------------------------------------ */
+/**
+ * Send an event to all WebSocket clients listening on a given sessionId.
+ */
 export function broadcast(sessionId, event, data) {
   if (!wss) return;
   const msg = JSON.stringify({ event, data });
-  wss.clients.forEach((c) => {
-    if (c.readyState === 1 && c.sessionId === String(sessionId)) {
-      c.send(msg);
+
+  // DEBUG LOG: confirm what we're sending
+  console.log(`🕸️ [broadcast] session=${sessionId}  event=${event}`);
+
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1 && client.sessionId === String(sessionId)) {
+      client.send(msg);
     }
   });
 }
 
-/** ------------------------------------------------------------------
- *  Exports
- * ------------------------------------------------------------------ */
 export { wss };
