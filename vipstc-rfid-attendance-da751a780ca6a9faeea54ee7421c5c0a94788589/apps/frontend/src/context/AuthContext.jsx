@@ -1,19 +1,14 @@
-// apps/frontend/src/context/AuthContext.jsx
-
-import React, { createContext, useState, useEffect, useContext } from 'react'; // added useContext
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { decodeJwt } from '../lib/jwt'; //
-// Import the new decoder
+import { decodeJwt } from '../lib/jwt.js';
 
 export const AuthContext = createContext();
 
-// Add a convenience hook
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
-  const [userRole, setUserRole] = useState(null); //
-// Add state for role
+  const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,12 +23,13 @@ export function AuthProvider({ children }) {
   function login(newToken) {
     sessionStorage.setItem('AUTH_TOKEN', newToken);
     setToken(newToken);
-
     const payload = decodeJwt(newToken);
+
     if (payload) {
       setUserRole(payload.role);
-      //
-// Role-based redirection logic
+      // ✅ CORRECTED LOGIC:
+      // Use the role from the token payload directly for navigation,
+      // as the 'userRole' state may not have updated yet.
       switch (payload.role) {
         case 'ADMIN':
         case 'PCOORD':
@@ -46,7 +42,7 @@ export function AuthProvider({ children }) {
           navigate('/login', { replace: true });
       }
     } else {
-      logout(); // Failsafe if token is invalid
+      logout();
     }
   }
 

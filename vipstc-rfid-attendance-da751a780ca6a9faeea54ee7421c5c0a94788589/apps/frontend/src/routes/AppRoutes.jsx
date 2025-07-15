@@ -26,6 +26,7 @@ export default function AppRoutes() {
         {/* --- Protected Routes --- */}
         <Route path="/dashboard/teacher" element={<Protected><TeacherDashboard /></Protected>} />
         <Route path="/dashboard/teacher/record/:subjectInstId" element={<Protected><RecordPage /></Protected>} />
+        <Route path="/dashboard/teacher/retrieve/:subjectInstId" element={<Protected><Navigate to="/selecting_date.html" replace /></Protected>} />
         <Route path="/dashboard/pcoord" element={<Protected><PCoordinatorDashboard /></Protected>} />
         <Route path="/dashboard/pcoord/faculty" element={<Protected><FacultyPage /></Protected>} />
         

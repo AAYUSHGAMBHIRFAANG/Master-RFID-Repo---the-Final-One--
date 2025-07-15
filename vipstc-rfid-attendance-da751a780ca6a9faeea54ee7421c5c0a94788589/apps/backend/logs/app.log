@@ -1142,3 +1142,13 @@
 [2025-07-15T15:56:47.539Z] 304 GET /api/session/mine/subjects 2.412 ms
 [2025-07-15T16:08:20.729Z] 200 POST /api/auth/login 65.282 ms
 [2025-07-15T16:13:23.527Z] 200 POST /api/auth/login 80.557 ms
+[2025-07-15T16:26:11.563Z] 200 POST /api/auth/login 93.525 ms
+[2025-07-15T16:26:16.641Z] 200 POST /api/auth/login 52.909 ms
+[2025-07-15T16:27:42.995Z] 200 POST /api/auth/login 59.277 ms
+[2025-07-15T16:27:47.020Z] 200 POST /api/auth/login 55.814 ms
+[2025-07-15T16:28:33.566Z] 200 POST /api/auth/login 53.462 ms
+[2025-07-15T16:28:41.126Z] 200 POST /api/auth/login 60.973 ms
+[2025-07-15T16:29:44.744Z] 200 POST /api/auth/login 66.382 ms
+[2025-07-15T16:35:35.106Z] 200 POST /api/auth/login 89.662 ms
+[2025-07-15T16:35:41.637Z] 200 POST /api/auth/login 61.443 ms
+[2025-07-15T16:35:44.011Z] 200 POST /api/auth/login 61.185 ms
